@@ -1,4 +1,4 @@
-package logstash
+package main
 
 import (
 	"encoding/json"
@@ -37,8 +37,6 @@ func NewLogstashAdapter(route *router.Route) (router.LogAdapter, error) {
 	}, nil
 }
 
-
-
 func GetLogspoutOptionsString(env []string) string {
 	if env != nil {
 		for _, value := range env {
@@ -65,7 +63,7 @@ func UnmarshalOptions(opt_string string) map[string]string {
 // Stream implements the router.LogAdapter interface.
 func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
-    options := UnmarshalOptions(getopt("OPTIONS", ""))
+	options := UnmarshalOptions(getopt("OPTIONS", ""))
 
 	resp, err := http.Get("http://169.254.169.254/latest/meta-data/instance-id")
 	instance_id := ""
@@ -78,18 +76,18 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 	}
 
 	for m := range logstream {
-	    container_options := UnmarshalOptions(GetLogspoutOptionsString(m.Container.Config.Env))
+		container_options := UnmarshalOptions(GetLogspoutOptionsString(m.Container.Config.Env))
 
-        // We give preference to the containers environment that is sending us the message
-        if container_options == nil {
-            container_options = options
-        } else if options != nil {
-            for k, v := range options {
-                if _, ok := container_options[k]; !ok {
-                    container_options[k] = v
-                }
-            }
-        }
+		// We give preference to the containers environment that is sending us the message
+		if container_options == nil {
+			container_options = options
+		} else if options != nil {
+			for k, v := range options {
+				if _, ok := container_options[k]; !ok {
+					container_options[k] = v
+				}
+			}
+		}
 
 		var msg interface{}
 
@@ -98,17 +96,16 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		if err != nil {
 			// the message is not in JSON make a new JSON message
 			msg = LogstashMessage{
-				Message:  m.Data,
-				Name:     m.Container.Name,
-				ID:       m.Container.ID,
-				Image:    m.Container.Config.Image,
-				Hostname: m.Container.Config.Hostname,
+				Message:    m.Data,
+				Name:       m.Container.Name,
+				ID:         m.Container.ID,
+				Image:      m.Container.Config.Image,
+				Hostname:   m.Container.Config.Hostname,
 				Args:       m.Container.Args,
-                InstanceId: instance_id,
-                Options:    container_options,
-                Labels:   m.Container.Config.Labels
+				InstanceId: instance_id,
+				Options:    container_options,
+				Labels:     m.Container.Config.Labels,
 			}
-
 		} else {
 			// the message is already in JSON just add the docker specific fields
 			jsonMsg["docker.name"] = m.Container.Name
@@ -137,13 +134,13 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
 // LogstashMessage is a simple JSON input to Logstash.
 type LogstashMessage struct {
-	Message  string `json:"message"`
-	Name     string `json:"docker.name"`
-	ID       string `json:"docker.id"`
-	Image    string `json:"docker.image"`
-	Hostname string `json:"docker.hostname"`
+	Message    string            `json:"message"`
+	Name       string            `json:"docker.name"`
+	ID         string            `json:"docker.id"`
+	Image      string            `json:"docker.image"`
+	Hostname   string            `json:"docker.hostname"`
 	Args       []string          `json:"docker.args,omitempty"`
-    Options    map[string]string `json:"options,omitempty"`
-    InstanceId string            `json:"instance-id,omitempty"`
-    Labels   map[string]string `json:"docker.labels,omitempty"`
+	Options    map[string]string `json:"options,omitempty"`
+	InstanceId string            `json:"instance-id,omitempty"`
+	Labels     map[string]string `json:"docker.labels,omitempty"`
 }
