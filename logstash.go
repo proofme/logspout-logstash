@@ -1,4 +1,4 @@
-package main
+package logstash
 
 import (
 	"encoding/json"
@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-
 	"github.com/gliderlabs/logspout/router"
 )
 
