@@ -3,8 +3,12 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"log"
 	"net"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/gliderlabs/logspout/router"
 )
@@ -18,6 +22,14 @@ type LogstashAdapter struct {
 	conn  net.Conn
 	route *router.Route
 }
+
+func getopt(name, dfault string) string {
+	value := os.Getenv(name)
+	if value == "" {
+		value = dfault
+	}
+	return value
+ }
 
 // NewLogstashAdapter creates a LogstashAdapter with UDP as the default transport.
 func NewLogstashAdapter(route *router.Route) (router.LogAdapter, error) {
