@@ -106,6 +106,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 				Args:       m.Container.Args,
                 InstanceId: instance_id,
                 Options:    container_options,
+                Labels:   m.Container.Config.Labels
 			}
 
 		} else {
@@ -117,6 +118,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 			jsonMsg["docker.args"] = m.Container.Args
 			jsonMsg["options"] = container_options
 			jsonMsg["instance-id"] = instance_id
+			jsonMsg["docker.labels"] = m.Container.Config.Labels
 			msg = jsonMsg
 		}
 
@@ -128,7 +130,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		_, err = a.conn.Write(js)
 		if err != nil {
 			log.Println("logstash:", err)
-			continue
+			os.Exit(3)
 		}
 	}
 }
@@ -143,4 +145,5 @@ type LogstashMessage struct {
 	Args       []string          `json:"docker.args,omitempty"`
     Options    map[string]string `json:"options,omitempty"`
     InstanceId string            `json:"instance-id,omitempty"`
+    Labels   map[string]string `json:"docker.labels,omitempty"`
 }
