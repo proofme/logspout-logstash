@@ -120,12 +120,15 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 			msg = LogstashMessage{
 				Message:    m.Data,
 				InstanceId: instance_id,
-				docker: docker,
+				Docker: docker,
+				subsystem: "docker",
+
 			}
 		} else {
 			// the message is already in JSON just add the docker specific fields
 			jsonMsg["instance-id"] = instance_id
 			jsonMsg["docker"] = docker
+			jsonMsg["docker"] = "docker"
 			msg = jsonMsg
 		}
 
@@ -156,6 +159,7 @@ type DockerInfo struct {
 // LogstashMessage is a simple JSON input to Logstash.
 type LogstashMessage struct {
 	Message    string            `json:"message"`
+	Subsystem string            `json:"subsystem"`
 	InstanceId string            `json:"instance-id,omitempty"`
     Docker  DockerInfo `json:"docker"`
 }
