@@ -129,14 +129,14 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 				Message:    m.Data,
 				InstanceId: instance_id,
 				Docker: docker,
-				subsystem: "docker",
+				Subsystem: "docker",
 
 			}
 		} else {
 			// the message is already in JSON just add the docker specific fields
 			jsonMsg["instance-id"] = instance_id
 			jsonMsg["docker"] = docker
-			jsonMsg["docker"] = "docker"
+			jsonMsg["subsystem"] = "docker"
 			msg = jsonMsg
 		}
 
