@@ -120,7 +120,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
                     	Args:       m.Container.Args,
                     	Options:    container_options,
                     	Labels:     FixLabels( m.Container.Config.Labels ),
-        			},
+        			}
 
 		err := json.Unmarshal([]byte(m.Data), &jsonMsg)
 		if err != nil {
