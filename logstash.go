@@ -103,30 +103,29 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 		var msg interface{}
 
 		var jsonMsg map[string]interface{}
+
+		docker := DockerInfo{
+        			    Name:       m.Container.Name,
+                    	ID:         m.Container.ID,
+                    	Image:      m.Container.Config.Image,
+                    	Hostname:   m.Container.Config.Hostname,
+                    	Args:       m.Container.Args,
+                    	Options:    container_options,
+                    	Labels:     m.Container.Config.Labels,
+        			},
+
 		err := json.Unmarshal([]byte(m.Data), &jsonMsg)
 		if err != nil {
 			// the message is not in JSON make a new JSON message
 			msg = LogstashMessage{
 				Message:    m.Data,
-				Name:       m.Container.Name,
-				ID:         m.Container.ID,
-				Image:      m.Container.Config.Image,
-				Hostname:   m.Container.Config.Hostname,
-				Args:       m.Container.Args,
 				InstanceId: instance_id,
-				Options:    container_options,
-				Labels:     m.Container.Config.Labels,
+				docker: docker,
 			}
 		} else {
 			// the message is already in JSON just add the docker specific fields
-			jsonMsg["docker.name"] = m.Container.Name
-			jsonMsg["docker.id"] = m.Container.ID
-			jsonMsg["docker.image"] = m.Container.Config.Image
-			jsonMsg["docker.hostname"] = m.Container.Config.Hostname
-			jsonMsg["docker.args"] = m.Container.Args
-			jsonMsg["options"] = container_options
 			jsonMsg["instance-id"] = instance_id
-			jsonMsg["docker.labels"] = m.Container.Config.Labels
+			jsonMsg["docker"] = docker
 			msg = jsonMsg
 		}
 
@@ -143,15 +142,20 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 	}
 }
 
+
+type DockerInfo struct {
+	Name     string `json:"name"`
+	ID       string `json:"id"`
+	Image    string `json:"image"`
+	Hostname string `json:"hostname"`
+	Args       []string          `json:"args,omitempty"`
+    Options    map[string]string `json:"options,omitempty"`
+    Labels     map[string]string `json:"labels,omitempty"`
+}
+
 // LogstashMessage is a simple JSON input to Logstash.
 type LogstashMessage struct {
 	Message    string            `json:"message"`
-	Name       string            `json:"docker.name"`
-	ID         string            `json:"docker.id"`
-	Image      string            `json:"docker.image"`
-	Hostname   string            `json:"docker.hostname"`
-	Args       []string          `json:"docker.args,omitempty"`
-	Options    map[string]string `json:"options,omitempty"`
 	InstanceId string            `json:"instance-id,omitempty"`
-	Labels     map[string]string `json:"docker.labels,omitempty"`
+    Docker  DockerInfo `json:"docker"`
 }
