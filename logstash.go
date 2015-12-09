@@ -71,6 +71,14 @@ func UnmarshalOptions(opt_string string) map[string]string {
 	return nil
 }
 
+func FixLabels(m map[string]string )  map[string]string{
+  r := make(map[string]string)
+  for k, v := range m {
+        r[ strings.Replace(k, ".", "_",-1) ] = v
+    }
+  return  r
+}
+
 // Stream implements the router.LogAdapter interface.
 func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
 
@@ -111,7 +119,7 @@ func (a *LogstashAdapter) Stream(logstream chan *router.Message) {
                     	Hostname:   m.Container.Config.Hostname,
                     	Args:       m.Container.Args,
                     	Options:    container_options,
-                    	Labels:     m.Container.Config.Labels,
+                    	Labels:     FixLabels( m.Container.Config.Labels ),
         			},
 
 		err := json.Unmarshal([]byte(m.Data), &jsonMsg)
